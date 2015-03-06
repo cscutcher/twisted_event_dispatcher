@@ -36,6 +36,11 @@ class EventListener(collections.Hashable):
 
     @property
     def listen_fn(self):
+        '''
+        Property to get the listen function that copes with weakref if present.
+
+        :returns: Callable that takes event arguent
+        '''
         if self._listen_fn is not None:
             return self._listen_fn
 
