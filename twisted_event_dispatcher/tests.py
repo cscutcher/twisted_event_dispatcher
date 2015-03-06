@@ -19,92 +19,113 @@ class TestEventDispatcher(unittest.TestCase):
     '''
     factory = EventDispatcher
 
+    def setUp(self):
+        self.inst = self.factory(('username', 'role'))
+
+    def tearDown(self):
+        return self.inst.stop()
+
     @defer.inlineCallbacks
     def test_all_match(self):
-        inst = self.factory(('username', 'role'))
+        '''
+        Test event handler is fired when all details match
+        '''
         listen_fn = mock.Mock()
 
-        yield inst.add_listener(listen_fn, 'during', username='bob', role='admin')
+        yield self.inst.add_event_handler(listen_fn, 'during', username='bob', role='admin')
         event = 'some_event'
 
-        yield inst.handle_event(event, username='bob', role='admin')
+        yield self.inst.handle_event(event, username='bob', role='admin')
 
         listen_fn.assert_called_once_with(event)
 
     @defer.inlineCallbacks
     def test_no_match(self):
-        inst = self.factory(('username', 'role'))
+        '''
+        Test handler doesn't fire when no details match
+        '''
         listen_fn = mock.Mock()
 
-        yield inst.add_listener(listen_fn, 'during', username='bob', role='admin')
+        yield self.inst.add_event_handler(listen_fn, 'during', username='bob', role='admin')
         event = 'some_event'
 
-        yield inst.handle_event(event, username='susan', role='admin')
+        yield self.inst.handle_event(event, username='susan', role='admin')
 
         self.assertFalse(listen_fn.called, 'function should not have been called')
 
     @defer.inlineCallbacks
     def test_partial_match(self):
-        inst = self.factory(('username', 'role'))
+        '''
+        Test handler fires when one detail matches, and remaining details are unspecifed
+        '''
         listen_fn = mock.Mock()
 
-        yield inst.add_listener(listen_fn, 'during', role='admin')
+        yield self.inst.add_event_handler(listen_fn, 'during', role='admin')
         event = 'some_event'
 
-        yield inst.handle_event(event, username='susan', role='admin')
+        yield self.inst.handle_event(event, username='susan', role='admin')
 
         listen_fn.assert_called_once_with(event)
 
     @defer.inlineCallbacks
     def test_remove(self):
-        inst = self.factory(('username', 'role'))
+        '''
+        Test a removed handler no longer fires
+        '''
         listen_fn = mock.Mock()
 
-        handle = yield inst.add_listener(listen_fn, 'during', username='bob', role='admin')
+        handle = yield self.inst.add_event_handler(
+            listen_fn, 'during', username='bob', role='admin')
         event = 'some_event'
 
-        yield inst.handle_event(event, username='bob', role='admin')
+        yield self.inst.handle_event(event, username='bob', role='admin')
 
-        yield inst.remove_listener(handle)
+        yield self.inst.remove_event_handler(handle)
 
         listen_fn.assert_called_once_with(event)
 
     @defer.inlineCallbacks
     def test_auto_remove(self):
-        inst = self.factory(('username', 'role'))
+        '''
+        Test that a function that is garbage collected no longer fires indicating it has
+        been automatically removed from dispatcher
+        '''
         listen_fn = mock.Mock()
 
         # Create lambda that can be deleted
         def listen_fn_wrapper(event):
             return listen_fn(event)
 
-        yield inst.add_listener(listen_fn_wrapper, 'during', username='bob', role='admin')
+        yield self.inst.add_event_handler(
+            listen_fn_wrapper, 'during', username='bob', role='admin')
         del listen_fn_wrapper
 
         event = 'some_event'
-        yield inst.handle_event(event, username='bob', role='admin')
+        yield self.inst.handle_event(event, username='bob', role='admin')
 
         self.assertFalse(listen_fn.called, 'function should not have been called')
 
     @defer.inlineCallbacks
-    def test_stop(self):
-        inst = self.factory(('username', 'role'))
+    def test_stop_start(self):
+        '''
+        Test that stopping and starting dispatcher prevent and allow handling as expected.
+        '''
         listen_fn = mock.Mock()
 
-        inst.add_listener(listen_fn, 'during', role='admin')
+        self.inst.add_event_handler(listen_fn, 'during', role='admin')
         event = 'some_event'
-        inst.handle_event(event, username='susan', role='admin')
+        self.inst.handle_event(event, username='susan', role='admin')
 
-        yield inst.stop()
-
-        listen_fn.assert_called_once_with(event)
-
-        inst.handle_event(event, username='susan', role='admin')
+        yield self.inst.stop()
 
         listen_fn.assert_called_once_with(event)
 
-        inst.start()
+        self.inst.handle_event(event, username='susan', role='admin')
 
-        yield inst.handle_event(event, username='susan', role='admin')
+        listen_fn.assert_called_once_with(event)
+
+        self.inst.start()
+
+        yield self.inst.handle_event(event, username='susan', role='admin')
 
         self.assertEqual(listen_fn.call_count, 2)
