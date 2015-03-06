@@ -13,10 +13,11 @@ class EventListener(collections.Hashable):
     '''
     Represents single event handler
     '''
-    def __init__(self, listen_fn, **other_kwargs):
+    def __init__(self, listen_fn, phase, **other_kwargs):
         self.listen_fn = listen_fn
         self.details = other_kwargs
         self.id = id(self)
+        self.phase = phase
 
     def __hash__(self):
         return self.id
@@ -30,17 +31,19 @@ class EventDispatcher(object):
         Sequence of strings which represent keyword arguments to use as indexes for event
         dispatching.
     '''
-    def __init__(self, valid_details):
+    def __init__(self, valid_details, phases=('before', 'during', 'after')):
         self._valid_details = tuple(valid_details)
         self._indexes = collections.defaultdict(self.index_factory)
         self._listeners = {}
+        self._phases = tuple(phases)
 
     listener_factory = EventListener
 
-    def index_factory(self):
+    @staticmethod
+    def index_factory():
         return collections.defaultdict(set)
 
-    def add_listener(self, listen_fn, use_weakref=True, **expected_details):
+    def add_listener(self, listen_fn, phase, use_weakref=True, **expected_details):
         '''
         '''
         if use_weakref:
@@ -49,7 +52,7 @@ class EventDispatcher(object):
 
         expected_details = {key: expected_details.pop(key, None) for key in self._valid_details}
 
-        listener_inst = self.listener_factory(listen_fn, **expected_details)
+        listener_inst = self.listener_factory(listen_fn, phase=phase, **expected_details)
         self._listeners[listener_inst.id] = listener_inst
 
         for detail, filter in expected_details.iteritems():
@@ -91,5 +94,11 @@ class EventDispatcher(object):
         else:
             listeners = filter_sets[0].intersection(*(filter_sets[1:]))
 
+        phase_dict = collections.defaultdict(list)
+
         for listener in listeners:
-            listener.listen_fn(event)
+            phase_dict[listener.phase].append(listener)
+
+        for phase in self._phases:
+            for listener in phase_dict[phase]:
+                listener.listen_fn(event)
