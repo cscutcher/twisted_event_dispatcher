@@ -48,3 +48,31 @@ class TestEventDispatcher(unittest.TestCase):
         inst.handle_event(event, username='susan', role='admin')
 
         listen_fn.assert_called_once_with(event)
+
+    def test_remove(self):
+        inst = self.factory(('username', 'role'))
+        listen_fn = mock.Mock()
+
+        handle = inst.add_listener(listen_fn, 'during', username='bob', role='admin')
+        event = 'some_event'
+
+        inst.handle_event(event, username='bob', role='admin')
+
+        inst.remove_listener(handle)
+
+        listen_fn.assert_called_once_with(event)
+
+    def test_auto_remove(self):
+        inst = self.factory(('username', 'role'))
+        listen_fn = mock.Mock()
+
+        # Create lambda that can be deleted
+        listen_fn_wrapper = lambda event: listen_fn(event)
+
+        handle = inst.add_listener(listen_fn_wrapper, 'during', username='bob', role='admin')
+        del listen_fn_wrapper
+
+        event = 'some_event'
+        inst.handle_event(event, username='bob', role='admin')
+
+        self.assertFalse(listen_fn.called, 'function should not have been called')

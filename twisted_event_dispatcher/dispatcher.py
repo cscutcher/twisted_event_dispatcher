@@ -13,11 +13,33 @@ class EventListener(collections.Hashable):
     '''
     Represents single event handler
     '''
-    def __init__(self, listen_fn, phase, **other_kwargs):
-        self.listen_fn = listen_fn
+    @staticmethod
+    def _null_func(event):
+        pass
+
+    def __init__(self, listen_fn, phase, use_weakref, remove_callback, **other_kwargs):
         self.details = other_kwargs
         self.id = id(self)
         self.phase = phase
+
+        if use_weakref:
+            self._listen_fn = None
+            self._listen_ref = weakref.ref(listen_fn, lambda _fn: remove_callback(self.id))
+        else:
+            self._listen_fn = listen_fn
+            self._listen_ref = None
+
+
+    @property
+    def listen_fn(self):
+        if self._listen_fn is not None:
+            return self._listen_fn
+
+        deref = self._listen_ref()
+        if deref is None:
+            return self._null_func
+        else:
+            return deref
 
     def __hash__(self):
         return self.id
@@ -46,23 +68,18 @@ class EventDispatcher(object):
     def add_listener(self, listen_fn, phase, use_weakref=True, **expected_details):
         '''
         '''
-        if use_weakref:
-            orig_listen_fn = listen_fn
-            listen_fn = weakref.proxy(listen_fn)
-
         expected_details = {key: expected_details.pop(key, None) for key in self._valid_details}
 
-        listener_inst = self.listener_factory(listen_fn, phase=phase, **expected_details)
+        listener_inst = self.listener_factory(
+            listen_fn,
+            phase=phase,
+            use_weakref=use_weakref,
+            remove_callback=self.remove_listener,
+            **expected_details)
         self._listeners[listener_inst.id] = listener_inst
 
         for detail, filter in expected_details.iteritems():
             self._indexes[detail][filter].add(listener_inst)
-
-        if use_weakref:
-            # If we're using weakref automate removal of listeners when object
-            # disappears.
-            weakref.ref(
-                orig_listen_fn, callback=(lambda _fn: self.remove_listener(listener_inst.id)))
 
         return listener_inst.id
 
@@ -70,7 +87,7 @@ class EventDispatcher(object):
         listener = self._listeners.pop(listener_id)
 
         for detail, filter in listener.details.iteritems():
-            self._indexes[detail][filter].remove(listener_inst)
+            self._indexes[detail][filter].remove(listener)
 
         del(listener)
 
