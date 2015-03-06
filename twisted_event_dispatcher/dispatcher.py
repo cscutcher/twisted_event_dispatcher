@@ -6,6 +6,10 @@ import collections
 import logging
 import weakref
 
+from twisted.internet import defer
+
+from twisted_event_dispatcher.deferred_helpers import instance_method_lock
+
 DEV_LOGGER = logging.getLogger(__name__)
 
 
@@ -58,6 +62,7 @@ class EventDispatcher(object):
         self._indexes = collections.defaultdict(self.index_factory)
         self._listeners = {}
         self._phases = tuple(phases)
+        self._listener_modification_lock = defer.DeferredLock()
 
     listener_factory = EventListener
 
@@ -76,13 +81,17 @@ class EventDispatcher(object):
             use_weakref=use_weakref,
             remove_callback=self.remove_listener,
             **expected_details)
+
+        return self._register_listener(listener_inst)
+
+    @instance_method_lock('_listener_modification_lock')
+    def _register_listener(self, listener_inst):
         self._listeners[listener_inst.id] = listener_inst
-
-        for detail, filter in expected_details.iteritems():
+        for detail, filter in listener_inst.details.iteritems():
             self._indexes[detail][filter].add(listener_inst)
-
         return listener_inst.id
 
+    @instance_method_lock('_listener_modification_lock')
     def remove_listener(self, listener_id):
         listener = self._listeners.pop(listener_id)
 
@@ -97,6 +106,7 @@ class EventDispatcher(object):
         '''
         return self._indexes[event_index][None].union(self._indexes[event_index][value])
 
+    @instance_method_lock('_listener_modification_lock')
     def handle_event(self, event, **event_details):
         '''
         Handle incoming event
