@@ -68,8 +68,17 @@ class EventDispatcher(object):
         self._listeners = {}
         self._phases = tuple(phases)
         self._listener_modification_lock = defer.DeferredLock()
+        self._state = 'running'
 
     listener_factory = EventListener
+
+
+    def start(self):
+        self._state = 'running'
+
+    def stop(self):
+        self._state = 'stopped'
+        return self._listener_modification_lock.acquire().addCallback(lambda lock: lock.release())
 
     @staticmethod
     def index_factory():
@@ -116,6 +125,9 @@ class EventDispatcher(object):
         '''
         Handle incoming event
         '''
+        if self._state == 'stopped':
+            return defer.succeed(None)
+
         filter_sets = [
             self._get_set_of_listeners(key, value) for key, value in event_details.iteritems()]
 

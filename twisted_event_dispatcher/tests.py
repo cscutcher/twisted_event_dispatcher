@@ -85,3 +85,26 @@ class TestEventDispatcher(unittest.TestCase):
         yield inst.handle_event(event, username='bob', role='admin')
 
         self.assertFalse(listen_fn.called, 'function should not have been called')
+
+    @defer.inlineCallbacks
+    def test_stop(self):
+        inst = self.factory(('username', 'role'))
+        listen_fn = mock.Mock()
+
+        inst.add_listener(listen_fn, 'during', role='admin')
+        event = 'some_event'
+        inst.handle_event(event, username='susan', role='admin')
+
+        yield inst.stop()
+
+        listen_fn.assert_called_once_with(event)
+
+        inst.handle_event(event, username='susan', role='admin')
+
+        listen_fn.assert_called_once_with(event)
+
+        inst.start()
+
+        yield inst.handle_event(event, username='susan', role='admin')
+
+        self.assertEqual(listen_fn.call_count, 2)
