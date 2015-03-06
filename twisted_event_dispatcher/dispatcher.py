@@ -143,6 +143,29 @@ class EventDispatcher(object):
         for listener in listeners:
             phase_dict[listener.phase].append(listener)
 
-        for phase in self._phases:
-            for listener in phase_dict[phase]:
-                listener.listen_fn(event)
+        return self._run_phase(None, iter(self._phases), phase_dict, event)
+
+    @staticmethod
+    def _phase_errback(failure, event, phase, listener):
+        DEV_LOGGER.error(
+            'Got failure: %r when triggering listener %r on phase %r with event %r',
+            failure,
+            event,
+            phase,
+            listener)
+        return None
+
+    @classmethod
+    def _run_phase(cls, _result, phase_iter, phase_dict, event):
+        try:
+            phase = phase_iter.next()
+        except StopIteration:
+            return defer.succeed(None)
+
+        phase_deferreds = [
+            defer.maybeDeferred(listener.listen_fn, event).addErrback(cls._phase_errback)
+            for listener in phase_dict[phase]]
+
+        return defer.DeferredList(phase_deferreds).addCallback(
+            cls._run_phase, phase_iter, phase_dict, event)
+
