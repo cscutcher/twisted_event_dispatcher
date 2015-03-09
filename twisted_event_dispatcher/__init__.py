@@ -1,1 +1,3 @@
-from twisted_event_dispatcher.dispatcher import EventDispatcher
+from twisted_event_dispatcher._dispatcher import EventDispatcher
+from twisted_event_dispatcher.interfaces import IEventDispatcher
+from twisted_event_dispatcher.interfaces import IBackgroundUtility

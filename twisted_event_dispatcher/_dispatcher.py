@@ -9,7 +9,7 @@ import weakref
 from zope.interface import implementer
 from twisted.internet import defer
 
-from twisted_event_dispatcher.deferred_helpers import instance_method_lock
+from twisted_event_dispatcher._deferred_helpers import instance_method_lock
 from twisted_event_dispatcher.interfaces import IEventDispatcher
 from twisted_event_dispatcher.interfaces import IBackgroundUtility
 
