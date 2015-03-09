@@ -6,9 +6,12 @@ import collections
 import logging
 import weakref
 
+from zope.interface import implementer
 from twisted.internet import defer
 
 from twisted_event_dispatcher.deferred_helpers import instance_method_lock
+from twisted_event_dispatcher.interfaces import IEventDispatcher
+from twisted_event_dispatcher.interfaces import IBackgroundUtility
 
 DEV_LOGGER = logging.getLogger(__name__)
 
@@ -61,18 +64,18 @@ class _EventHandlerRegistrationEntry(collections.Hashable):
         return self.id
 
 
+@implementer(IBackgroundUtility, IEventDispatcher)
 class EventDispatcher(object):
     '''
     Handles dispatching for abstract events
 
-    :param indexes:
-        Sequence of strings which represent keyword arguments to use as indexes for event
-        dispatching.
+    :param allowed_match_spec_keywords:
+        Sequence of strings which represent keyword arguments to allow when adding event handlers.
     '''
     _registration_factory = _EventHandlerRegistrationEntry
 
-    def __init__(self, valid_details, phases=('before', 'during', 'after')):
-        self._valid_details = tuple(valid_details)
+    def __init__(self, allowed_match_spec_keywords, phases=('before', 'during', 'after')):
+        self._allowed_match_spec_keywords = tuple(allowed_match_spec_keywords)
         self._indexes = collections.defaultdict(self._index_factory)
         self._event_handlers = {}
         self._phases = tuple(phases)
@@ -127,7 +130,8 @@ class EventDispatcher(object):
             Deferred that will callback when handler has been successfully added with an id
             that can be used to remove the handlers registration.
         '''
-        match_spec_complete = {key: match_spec.pop(key, None) for key in self._valid_details}
+        match_spec_complete = {
+            key: match_spec.pop(key, None) for key in self._allowed_match_spec_keywords}
 
         if len(match_spec):
             raise ValueError('Got unexpected match_spec: {!r}'.format(match_spec))
