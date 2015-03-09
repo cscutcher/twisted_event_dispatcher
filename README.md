@@ -5,7 +5,7 @@ IReactorCore but with some more capability.
 
 I'm still working out exactly what I want to achieve, but I have noticed on multiple occasions
 I have ended up having to develop an event dispatcher for specific scenarios, and in each
-case I find myself rediscovering the same bugs and edge cases. 
+case I find myself rediscovering the same bugs and edge cases.
 I hope by implementing a more generic and flexible reusable module I can avoid this in the future.
 
 What currently exists?
@@ -15,8 +15,8 @@ they are currently not quite right.
 
 Use subscription adapters from the zope component architecture
 --------------------------------------------------------------
-I like ZCA but having to use a different interface everytime I want to only fire some of the 
-handlers feels to inflexible. 
+I like ZCA but having to use a different interface everytime I want to only fire some of the
+handlers feels to inflexible.
 
 zope.event
 ----------
@@ -25,7 +25,7 @@ More research needed.
 
 Twisted reactor fireSystemEvent
 -------------------------------
-Does most of what I want but I find the only having eventType as the filter condition when 
+Does most of what I want but I find the only having eventType as the filter condition when
 firing handlers is limiting.
 
 pydispatcher and py-notify
@@ -38,7 +38,7 @@ Worth researching if just for inspiration.
 
 Implementation
 ==============
-The code in this repo is a experimental implementation to allow me to think about what I want 
+The code in this repo is a experimental implementation to allow me to think about what I want
 and play around some.
 
 At the moment it;
@@ -49,6 +49,11 @@ At the moment it;
 * All phases will wait for deferreds to callback before starting the next phase.
 
 I'd also like to;
-* Add callbacks that would fires N times before removing itself. 
+* Add callbacks that would fires N times before removing itself.
 * Maybe allow the keys that can be specified in match spec to be changed after object is init.
-* Improve the general efficiency. 
+* Improve the general efficiency.
+
+Why 99 characters instead of 79
+===============================
+Forgive me Guido for I have sinned. I find 79 characters restrictive so I prefer to use 99 for
+my projects if I can.
