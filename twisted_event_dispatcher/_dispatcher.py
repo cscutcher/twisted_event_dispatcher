@@ -80,13 +80,13 @@ class EventDispatcher(object):
         self._event_handlers = {}
         self._phases = tuple(phases)
         self._event_handler_modification_lock = defer.DeferredLock()
-        self._state = 'running'
+        self._running = False
 
     def start(self):
         '''
         Restart a stopped EventDispatcher
         '''
-        self._state = 'running'
+        self._running = True
 
     def stop(self):
         '''
@@ -95,9 +95,14 @@ class EventDispatcher(object):
 
         :returns: Deferred that will callback when the EventDispatcher has stopped as is quiescent.
         '''
-        self._state = 'stopped'
+        self._running = False
         return self._event_handler_modification_lock.acquire().addCallback(
             lambda lock: lock.release())
+
+    @property
+    def running(self):
+        '''RO property for running'''
+        return self._running
 
     @staticmethod
     def _index_factory():
@@ -182,7 +187,7 @@ class EventDispatcher(object):
         Handle incoming event. Any relevant details that might affect the handlers that will be
         triggered should be passed as **event_details
         '''
-        if self._state == 'stopped':
+        if not self._running:
             return defer.succeed(None)
 
         filter_sets = [

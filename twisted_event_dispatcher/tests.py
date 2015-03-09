@@ -21,6 +21,7 @@ class TestEventDispatcher(unittest.TestCase):
 
     def setUp(self):
         self.inst = self.factory(('username', 'role'))
+        self.inst.start()
 
     def tearDown(self):
         return self.inst.stop()
