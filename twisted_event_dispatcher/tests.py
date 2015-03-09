@@ -129,3 +129,16 @@ class TestEventDispatcher(unittest.TestCase):
         yield self.inst.handle_event(event, username='susan', role='admin')
 
         self.assertEqual(listen_fn.call_count, 2)
+
+    def test_invalid_spec(self):
+        '''
+        Test that specify a match spec that isn't present during setup raises an exception.
+        '''
+        listen_fn = mock.Mock()
+
+        self.assertRaises(
+            ValueError,
+            self.inst.add_event_handler,
+            listen_fn,
+            'during',
+            password='admin')

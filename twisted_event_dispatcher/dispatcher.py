@@ -37,7 +37,6 @@ class _EventHandlerRegistrationEntry(collections.Hashable):
             self._listen_fn = listen_fn
             self._listen_ref = None
 
-
     @property
     def listen_fn(self):
         '''
@@ -101,7 +100,7 @@ class EventDispatcher(object):
     def _index_factory():
         return collections.defaultdict(set)
 
-    def add_event_handler(self, listen_fn, phase, use_weakref=True, **expected_details):
+    def add_event_handler(self, listen_fn, phase, use_weakref=True, **match_spec):
         '''
         Add new event handler
 
@@ -119,7 +118,7 @@ class EventDispatcher(object):
             the function being garbage collected by python. If it is garbage collected the
             handler registration will be automatically removed.
 
-        :param **expected_details:
+        :param **match_spec:
             Detail specification.
             The handler will only be triggered if all details match this specification.
             None (details) indicated trigger whatever the value of the detail is.
@@ -128,14 +127,17 @@ class EventDispatcher(object):
             Deferred that will callback when handler has been successfully added with an id
             that can be used to remove the handlers registration.
         '''
-        expected_details = {key: expected_details.pop(key, None) for key in self._valid_details}
+        match_spec_complete = {key: match_spec.pop(key, None) for key in self._valid_details}
+
+        if len(match_spec):
+            raise ValueError('Got unexpected match_spec: {!r}'.format(match_spec))
 
         event_handler_inst = self._registration_factory(
             listen_fn,
             phase=phase,
             use_weakref=use_weakref,
             remove_callback=self.remove_event_handler,
-            **expected_details)
+            **match_spec_complete)
 
         return self._register_event_handler(event_handler_inst)
 
@@ -180,7 +182,8 @@ class EventDispatcher(object):
             return defer.succeed(None)
 
         filter_sets = [
-            self._get_set_of_event_handlers(key, value) for key, value in event_details.iteritems()]
+            self._get_set_of_event_handlers(key, value)
+            for key, value in event_details.iteritems()]
 
         if len(filter_sets) < 1:
             return defer.succeed()
@@ -225,4 +228,3 @@ class EventDispatcher(object):
 
         return defer.DeferredList(phase_deferreds).addCallback(
             cls._run_phase, phase_iter, phase_dict, event)
-
