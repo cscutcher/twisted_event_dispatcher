@@ -127,6 +127,8 @@ class TestEventDispatcher(unittest.TestCase):
 
         self.inst.start()
 
+        listen_fn.assert_called_once_with(event)
+
         yield self.inst.handle_event(event, username='susan', role='admin')
 
         self.assertEqual(listen_fn.call_count, 2)

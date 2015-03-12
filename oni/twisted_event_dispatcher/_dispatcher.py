@@ -156,8 +156,8 @@ class EventDispatcher(object):
         Used internally to actually store the registration and set up any indexes.
         '''
         self._event_handlers[event_handler_inst.id] = event_handler_inst
-        for detail, filter in event_handler_inst.details.iteritems():
-            self._indexes[detail][filter].add(event_handler_inst)
+        for detail, detail_filter in event_handler_inst.details.iteritems():
+            self._indexes[detail][detail_filter].add(event_handler_inst)
         return event_handler_inst.id
 
     @instance_method_lock('_event_handler_modification_lock')
@@ -216,9 +216,9 @@ class EventDispatcher(object):
         DEV_LOGGER.error(
             'Got failure: %r when triggering event_handler %r on phase %r with event %r',
             failure,
-            event,
+            event_handler,
             phase,
-            event_handler)
+            event)
         return None
 
     @classmethod
