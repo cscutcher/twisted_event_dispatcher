@@ -9,9 +9,9 @@ import weakref
 from zope.interface import implementer
 from twisted.internet import defer
 
-from twisted_event_dispatcher._deferred_helpers import instance_method_lock
-from twisted_event_dispatcher.interfaces import IEventDispatcher
-from twisted_event_dispatcher.interfaces import IBackgroundUtility
+from oni.twisted_event_dispatcher._deferred_helpers import instance_method_lock
+from oni.twisted_event_dispatcher.interfaces import IEventDispatcher
+from oni.twisted_event_dispatcher.interfaces import IBackgroundUtility
 
 DEV_LOGGER = logging.getLogger(__name__)
 

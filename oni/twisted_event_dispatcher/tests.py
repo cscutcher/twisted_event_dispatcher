@@ -8,7 +8,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 
-from twisted_event_dispatcher import EventDispatcher
+from oni.twisted_event_dispatcher import EventDispatcher
 
 DEV_LOGGER = logging.getLogger(__name__)
 
