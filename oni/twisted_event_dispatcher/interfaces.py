@@ -2,6 +2,8 @@
 """
 Interfaces for twisted_event_dispatcher
 """
+# Zope interfaces break pylint: disable=no-method-argument,no-self-argument
+
 import logging
 import zope.interface
 

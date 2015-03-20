@@ -195,7 +195,7 @@ class EventDispatcher(object):
             for key, value in event_details.iteritems()]
 
         if len(filter_sets) < 1:
-            return defer.succeed()
+            return defer.succeed(None)
         elif len(filter_sets) == 1:
             event_handlers = filter_sets[0]
         else:

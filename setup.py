@@ -3,6 +3,7 @@
 Setup twisted_event_dispatcher
 """
 from setuptools import setup, find_packages
+
 setup(
     name='twisted_event_dispatcher',
     author='Chris Scutcher',
@@ -10,7 +11,6 @@ setup(
     url='https://github.com/cscutcher/twisted_event_dispatcher',
     version='0.1',
     packages=find_packages(),
-    setup_requires=['nose>=1.0'],
-    install_requires=['twisted', 'zope.interface', 'mock'],
+    install_requires=('twisted', 'zope.interface', 'mock'),
     namespace_packages = ['oni'],
 )
