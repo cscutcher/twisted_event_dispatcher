@@ -1,4 +1,5 @@
 # twisted_event_dispatcher
+[![Build Status](https://travis-ci.org/cscutcher/twisted_event_dispatcher.svg)](https://travis-ci.org/cscutcher/twisted_event_dispatcher)
 
 This aims to add capability similar to the fireSystemEvent and addSystemEventTrigger methods on
 IReactorCore but with some more capability.
