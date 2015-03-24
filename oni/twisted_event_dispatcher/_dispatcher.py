@@ -150,6 +150,7 @@ class EventDispatcher(object):
         '''
         See :py:func:`IEventDispatcher.remove_event_handler`
         '''
+        DEV_LOGGER.debug('Removing event handler with id %r', event_handler_id)
         event_handler = self._event_handlers.pop(event_handler_id)
 
         for detail, filter in event_handler.details.iteritems():
