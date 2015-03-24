@@ -73,6 +73,7 @@ Ignore this setup for doctest.
 >>> @wait_for(timeout=5.0)
 ... def wait_for_result(deferred):
 ...     return deferred
+
 ```
 
 First we create an instance of EventDispatcher to handle these events.
@@ -80,6 +81,7 @@ First we create an instance of EventDispatcher to handle these events.
 ```python
 >>> user_event_dispatcher = EventDispatcher(
 ...     allowed_match_spec_keywords=('event_type','user','role'))
+
 ```
 
 You could register this with the zope component architecture as a utility providing
@@ -98,6 +100,7 @@ We define something that will get called with our event.
 ...      # and pretend that this is an asyncronous function
 ...      return defer.succeed(None)
 ...
+
 ```
 
 Then we register the handler with the dispatcher. It'll give us an id we can use later to remove
@@ -105,6 +108,7 @@ the handler.
 
 ```python
 >>> handler_id = wait_for_result(user_event_dispatcher.add_event_handler(notify_admin, 'during'))
+
 ```
 
 Then imagine we get a new user called bob. We construct an object that will contain the information
@@ -114,12 +118,14 @@ the handler needs. In this case we'll user a named tuple
 >>> from collections import namedtuple
 >>> UserEvent = namedtuple('UserEvent', ('event_type', 'user', 'role', 'other_data'))
 >>> event = UserEvent('user_created', 'bob', 'user', '1234')
+
 ```
 
 We need to start the dispatcher before it'll actually notify handlers.
 
 ```python
 >>> user_event_dispatcher.start()
+
 ```
 
 Now we fire the event. Note we have to pass details manually.
@@ -129,6 +135,7 @@ Now we fire the event. Note we have to pass details manually.
 ...     event, event_type=event.event_type, role=event.role, user=event.user))
 >>> calls
 [UserEvent(event_type='user_created', user='bob', role='user', other_data='1234')]
+
 ```
 
 Lets fire a second event;
@@ -139,6 +146,7 @@ Lets fire a second event;
 >>> calls # doctest: +NORMALIZE_WHITESPACE
 [UserEvent(event_type='user_created', user='bob', role='user', other_data='1234'), 
  UserEvent(event_type='user_created', user='susan', role='admin', other_data='4567')]
+
 ```
 
 We can remove the handler to ensure we're no longer notified.
@@ -146,11 +154,13 @@ We can remove the handler to ensure we're no longer notified.
 Let's empty our call dict;
 ```python
 >>> calls[:] = []
+
 ```
 
 Now remove the handler;
 ```python
 >>> wait_for_result(user_event_dispatcher.remove_event_handler(handler_id))
+
 ```
 
 If we fire another event now nothing should happen;
@@ -161,6 +171,7 @@ If we fire another event now nothing should happen;
 ...     event, event_type=event.event_type, role=event.role, user=event.user))
 >>> calls
 []
+
 ```
 
 What if we want a handler that only fires for events when role == 'user'.
@@ -169,6 +180,7 @@ We can do this by specifying a match spec when we add the handler.
 ```python
 >>> handler_id = wait_for_result(user_event_dispatcher.add_event_handler(
 ...     notify_admin, 'during', role='user'))
+
 ```
 
 Now if we fire with an admin user we shouldn't get triggered.
@@ -179,6 +191,7 @@ Now if we fire with an admin user we shouldn't get triggered.
 ...     event, event_type=event.event_type, role=event.role, user=event.user))
 >>> calls
 []
+
 ```
 
 but if we fire with a normal user we will be triggered.
@@ -189,4 +202,5 @@ but if we fire with a normal user we will be triggered.
 ...     event, event_type=event.event_type, role=event.role, user=event.user))
 >>> calls
 [UserEvent(event_type='user_created', user='bob', role='user', other_data='1234')]
+
 ```
