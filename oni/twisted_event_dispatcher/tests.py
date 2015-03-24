@@ -36,7 +36,7 @@ class TestEventDispatcher(unittest.TestCase):
         yield self.inst.add_event_handler(listen_fn, 'during', username='bob', role='admin')
         event = 'some_event'
 
-        yield self.inst.handle_event(event, username='bob', role='admin')
+        yield self.inst.fire_event(event, username='bob', role='admin')
 
         listen_fn.assert_called_once_with(event)
 
@@ -50,7 +50,7 @@ class TestEventDispatcher(unittest.TestCase):
         yield self.inst.add_event_handler(listen_fn, 'during', username='bob', role='admin')
         event = 'some_event'
 
-        yield self.inst.handle_event(event, username='susan', role='admin')
+        yield self.inst.fire_event(event, username='susan', role='admin')
 
         self.assertFalse(listen_fn.called, 'function should not have been called')
 
@@ -64,7 +64,7 @@ class TestEventDispatcher(unittest.TestCase):
         yield self.inst.add_event_handler(listen_fn, 'during', role='admin')
         event = 'some_event'
 
-        yield self.inst.handle_event(event, username='susan', role='admin')
+        yield self.inst.fire_event(event, username='susan', role='admin')
 
         listen_fn.assert_called_once_with(event)
 
@@ -79,7 +79,7 @@ class TestEventDispatcher(unittest.TestCase):
             listen_fn, 'during', username='bob', role='admin')
         event = 'some_event'
 
-        yield self.inst.handle_event(event, username='bob', role='admin')
+        yield self.inst.fire_event(event, username='bob', role='admin')
 
         yield self.inst.remove_event_handler(handle)
 
@@ -102,7 +102,7 @@ class TestEventDispatcher(unittest.TestCase):
         del listen_fn_wrapper
 
         event = 'some_event'
-        yield self.inst.handle_event(event, username='bob', role='admin')
+        yield self.inst.fire_event(event, username='bob', role='admin')
 
         self.assertFalse(listen_fn.called, 'function should not have been called')
 
@@ -115,13 +115,13 @@ class TestEventDispatcher(unittest.TestCase):
 
         self.inst.add_event_handler(listen_fn, 'during', role='admin')
         event = 'some_event'
-        self.inst.handle_event(event, username='susan', role='admin')
+        self.inst.fire_event(event, username='susan', role='admin')
 
         yield self.inst.stop()
 
         listen_fn.assert_called_once_with(event)
 
-        self.inst.handle_event(event, username='susan', role='admin')
+        self.inst.fire_event(event, username='susan', role='admin')
 
         listen_fn.assert_called_once_with(event)
 
@@ -129,7 +129,7 @@ class TestEventDispatcher(unittest.TestCase):
 
         listen_fn.assert_called_once_with(event)
 
-        yield self.inst.handle_event(event, username='susan', role='admin')
+        yield self.inst.fire_event(event, username='susan', role='admin')
 
         self.assertEqual(listen_fn.call_count, 2)
 

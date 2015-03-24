@@ -182,7 +182,7 @@ class EventDispatcher(object):
         return self._indexes[event_index][None].union(self._indexes[event_index][value])
 
     @instance_method_lock('_event_handler_modification_lock')
-    def handle_event(self, event, **event_details):
+    def fire_event(self, event, **event_details):
         '''
         Handle incoming event. Any relevant details that might affect the handlers that will be
         triggered should be passed as **event_details

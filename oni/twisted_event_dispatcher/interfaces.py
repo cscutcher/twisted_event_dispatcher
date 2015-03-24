@@ -75,8 +75,11 @@ class IEventDispatcher(zope.interface.Interface):
         :returns: Deferred that will callback when registration has been removed.
         '''
 
-    def handle_event(event, **event_details):
+    def fire_event(event, **event_details):
         '''
-        Handle incoming event. Any relevant details that might affect the handlers that will be
-        triggered should be passed as **event_details
+        Trigger incoming event and notify and event_handlers whose match_spec matches
+        event_details.
+
+        Any relevant details that might affect the handlers that will be triggered should be
+        passed as **event_details.
         '''
