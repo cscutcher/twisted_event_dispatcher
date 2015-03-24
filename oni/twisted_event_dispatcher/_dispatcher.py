@@ -63,6 +63,12 @@ class _EventHandlerRegistrationEntry(collections.Hashable):
     def __hash__(self):
         return self.id
 
+    def __repr__(self):
+        return (
+            '<{inst.__class__.__module__}.{inst.__class__.__name__}'
+            '(id={inst.id!r}, listen_fn={inst.listen_fn!r}, phase={inst.phase!r}, '
+            'details={inst.details!r})>').format(inst=self)
+
 
 @implementer(IBackgroundUtility, IEventDispatcher)
 class EventDispatcher(object):
@@ -132,6 +138,8 @@ class EventDispatcher(object):
         '''
         Used internally to actually store the registration and set up any indexes.
         '''
+        DEV_LOGGER.debug(
+            'Registering event handler: %r', event_handler_inst)
         self._event_handlers[event_handler_inst.id] = event_handler_inst
         for detail, detail_filter in event_handler_inst.details.iteritems():
             self._indexes[detail][detail_filter].add(event_handler_inst)
@@ -160,12 +168,20 @@ class EventDispatcher(object):
         '''
         See :py:func:`IEventDispatcher.fire_event`
         '''
-        if not self._running:
+        DEV_LOGGER.debug(
+            'Firing for event %r with details %r',
+            event,
+            event_details)
+
+        if not self.running:
+            DEV_LOGGER.warning('Event %r received but dispatcher is not running')
             return defer.succeed(None)
 
         filter_sets = [
             self._get_set_of_event_handlers(key, value)
             for key, value in event_details.iteritems()]
+
+        DEV_LOGGER.debug('Found %r filter_sets', len(filter_sets))
 
         if len(filter_sets) < 1:
             return defer.succeed(None)
@@ -190,6 +206,12 @@ class EventDispatcher(object):
             phase = phase_iter.next()
         except StopIteration:
             return defer.succeed(None)
+
+        DEV_LOGGER.debug(
+            'Running phase %r for event %r. Contains %r',
+            phase,
+            event,
+            phase_dict[phase])
 
         phase_deferreds = [
             defer.maybeDeferred(event_handler.listen_fn, event)
