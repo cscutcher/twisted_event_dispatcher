@@ -181,19 +181,6 @@ class EventDispatcher(object):
 
         return self._run_phase(None, iter(self._phases), phase_dict, event)
 
-    @staticmethod
-    def _phase_errback(failure, event, phase, event_handler):
-        '''
-        Consume any errors and log.
-        '''
-        DEV_LOGGER.error(
-            'Got failure: %r when triggering event_handler %r on phase %r with event %r',
-            failure,
-            event_handler,
-            phase,
-            event)
-        return None
-
     @classmethod
     def _run_phase(cls, _result, phase_iter, phase_dict, event):
         '''
@@ -205,7 +192,7 @@ class EventDispatcher(object):
             return defer.succeed(None)
 
         phase_deferreds = [
-            defer.maybeDeferred(event_handler.listen_fn, event).addErrback(cls._phase_errback)
+            defer.maybeDeferred(event_handler.listen_fn, event)
             for event_handler in phase_dict[phase]]
 
         return defer.DeferredList(phase_deferreds).addCallback(
