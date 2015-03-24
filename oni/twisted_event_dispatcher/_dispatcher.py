@@ -110,30 +110,7 @@ class EventDispatcher(object):
 
     def add_event_handler(self, listen_fn, phase, use_weakref=True, **match_spec):
         '''
-        Add new event handler
-
-        :param callable listen_fn:
-            Callable to call when a new event is received and detail specification matches.
-
-        :param phase:
-            Phase to trigger handler. Set in self._phases. Usually before, during, after.
-            All handlers in a phase are triggered concurrently and the next phase's wont be
-            triggered until the last phase finished.
-
-        :param bool use_weakref:
-            Use a weakref when storing the listen_fn.
-            This will mean that the functions registration as an event handler will not prevent
-            the function being garbage collected by python. If it is garbage collected the
-            handler registration will be automatically removed.
-
-        :param **match_spec:
-            Detail specification.
-            The handler will only be triggered if all details match this specification.
-            None (details) indicated trigger whatever the value of the detail is.
-
-        :returns:
-            Deferred that will callback when handler has been successfully added with an id
-            that can be used to remove the handlers registration.
+        See :py:func:`IEventDispatcher.add_event_handler`
         '''
         match_spec_complete = {
             key: match_spec.pop(key, None) for key in self._allowed_match_spec_keywords}
@@ -163,10 +140,7 @@ class EventDispatcher(object):
     @instance_method_lock('_event_handler_modification_lock')
     def remove_event_handler(self, event_handler_id):
         '''
-        Remove a handlers registration so it's no longer fired.
-
-        :param event_handler_id: Reference that was returned when adding the handler.
-        :returns: Deferred that will callback when registration has been removed.
+        See :py:func:`IEventDispatcher.remove_event_handler`
         '''
         event_handler = self._event_handlers.pop(event_handler_id)
 
@@ -184,8 +158,7 @@ class EventDispatcher(object):
     @instance_method_lock('_event_handler_modification_lock')
     def fire_event(self, event, **event_details):
         '''
-        Handle incoming event. Any relevant details that might affect the handlers that will be
-        triggered should be passed as **event_details
+        See :py:func:`IEventDispatcher.fire_event`
         '''
         if not self._running:
             return defer.succeed(None)
