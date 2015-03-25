@@ -9,7 +9,8 @@ import weakref
 from zope.interface import implementer
 from twisted.internet import defer
 
-from oni.twisted_event_dispatcher._deferred_helpers import instance_method_lock
+from oni.twisted_event_dispatcher._deferred_helpers import (
+    instance_method_lock)
 from oni.twisted_event_dispatcher.interfaces import IEventDispatcher
 from oni.twisted_event_dispatcher.interfaces import IBackgroundUtility
 
@@ -112,6 +113,9 @@ class EventDispatcher(object):
 
     @staticmethod
     def _index_factory():
+        '''
+        Create new factory
+        '''
         return collections.defaultdict(set)
 
     def add_event_handler(self, listen_fn, phase, use_weakref=True, **match_spec):
@@ -153,8 +157,8 @@ class EventDispatcher(object):
         DEV_LOGGER.debug('Removing event handler with id %r', event_handler_id)
         event_handler = self._event_handlers.pop(event_handler_id)
 
-        for detail, filter in event_handler.details.iteritems():
-            self._indexes[detail][filter].remove(event_handler)
+        for detail, filter_inst in event_handler.details.iteritems():
+            self._indexes[detail][filter_inst].remove(event_handler)
 
         del(event_handler)
 

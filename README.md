@@ -3,6 +3,8 @@
 
 `twisted_event_dispatcher` is an experimental generic event dispatcher written for twisted.
 
+Copyright Cisco Systems International 2015
+
 Example Usage
 =============
 

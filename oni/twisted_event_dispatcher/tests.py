@@ -20,10 +20,12 @@ class TestEventDispatcher(unittest.TestCase):
     factory = EventDispatcher
 
     def setUp(self):
+        '''setUp test'''
         self.inst = self.factory(('username', 'role'))
         self.inst.start()
 
     def tearDown(self):
+        '''tearDown test'''
         return self.inst.stop()
 
     @defer.inlineCallbacks
@@ -95,6 +97,7 @@ class TestEventDispatcher(unittest.TestCase):
 
         # Create lambda that can be deleted
         def listen_fn_wrapper(event):
+            '''Just pass through to mock'''
             return listen_fn(event)
 
         yield self.inst.add_event_handler(
