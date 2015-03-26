@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Random feedback thinger
+Contains primary implementation of IEventDispatcher
 """
 import collections
 import logging
