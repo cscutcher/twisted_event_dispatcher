@@ -91,7 +91,7 @@ Lets fire a second event;
 >>> result = wait_for_result(user_event_dispatcher.fire_event(
 ...     event, event_type=event.event_type, role=event.role, user=event.user))
 >>> calls # doctest: +NORMALIZE_WHITESPACE
-[UserEvent(event_type='user_created', user='bob', role='user', other_data='1234'), 
+[UserEvent(event_type='user_created', user='bob', role='user', other_data='1234'),
  UserEvent(event_type='user_created', user='susan', role='admin', other_data='4567')]
 
 ```
