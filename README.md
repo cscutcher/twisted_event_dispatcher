@@ -5,12 +5,11 @@ https://github.com/cscutcher/twisted_event_dispatcher
 
 `twisted_event_dispatcher` is an experimental generic event dispatcher written for twisted.
 
-Copyright Cisco Systems International 2015
 
 Example Usage
 =============
 
-Say we want to build a event dispatcher that notifies a subsytem when a new user is created.
+Say we want to build an event dispatcher that notifies a subsytem when a new user is created.
 
 Ignore this setup for doctest.
 ```python
@@ -157,16 +156,16 @@ but if we fire with a normal user we will be triggered.
 Rationale
 =========
 
-This aims to add capability similar to the fireSystemEvent and addSystemEventTrigger methods on
-IReactorCore but with some more capability.
+This aims to add a capability similar to the fireSystemEvent and addSystemEventTrigger methods on
+IReactorCore but with some more functionality.
 
-I'm still working out exactly what I want to achieve, but I have noticed on multiple occasions
-I have ended up having to develop an event dispatcher for specific scenarios, and in each
-case I find myself rediscovering the same bugs and edge cases.
-I hope by implementing a more generic and flexible reusable module I can avoid this in the future.
+The need for an event dispatcher mechanism has arisen on multiple occasions.
+This has led to the development of several independent mechanisms, but with the rediscovery of
+the same edge cases and the occurrence of similar bugs.
+This more generic, flexible and reusable module should help to avoid this in the future.
 
-What currently exists?
-----------------------
+What currently exists? (as of 03-2015)
+--------------------------------------
 Ideally I'd like to use something that already exists. This is what I've considered and why
 they are currently not quite right.
 
@@ -200,6 +199,8 @@ and play around some.
 
 At the moment it;
 * Allow different callables to be triggered depending on more than just eventType string.
+  Events can be labelled by one (or more) of a statically defined set of keywords; and handlers
+  having a specification of which matching keywords can trigger them.
   So for example say we have an event that fires when a new users been added we could have
   callbacks that would fire on every new user, or just when users of certain roles fire.
 * Allow more than just three phases.

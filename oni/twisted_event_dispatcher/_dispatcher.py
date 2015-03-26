@@ -19,7 +19,7 @@ DEV_LOGGER = logging.getLogger(__name__)
 
 class _EventHandlerRegistrationEntry(collections.Hashable):
     '''
-    Represents single event handler
+    Stores single event handler
     '''
     @staticmethod
     def _null_func(event):
@@ -78,6 +78,8 @@ class EventDispatcher(object):
 
     :param allowed_match_spec_keywords:
         Sequence of strings which represent keyword arguments to allow when adding event handlers.
+
+    After initialisation an instance will be in the stopped state until .start() is called.
     '''
     _registration_factory = _EventHandlerRegistrationEntry
 
