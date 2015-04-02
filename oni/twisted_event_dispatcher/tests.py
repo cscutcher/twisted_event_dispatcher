@@ -94,6 +94,7 @@ class TestEventDispatcher(unittest.TestCase):
         been automatically removed from dispatcher
         '''
         listen_fn = mock.Mock()
+        event = 'some_event'
 
         # Create lambda that can be deleted
         def listen_fn_wrapper(event):
@@ -102,9 +103,15 @@ class TestEventDispatcher(unittest.TestCase):
 
         yield self.inst.add_event_handler(
             listen_fn_wrapper, 'during', username='bob', role='admin')
+
+        # Fire test
+        yield self.inst.fire_event(event, username='bob', role='admin')
+        listen_fn.assert_called_once_with(event)
+        listen_fn.reset_mock()
+
+        # Delete and fire again
         del listen_fn_wrapper
 
-        event = 'some_event'
         yield self.inst.fire_event(event, username='bob', role='admin')
 
         self.assertFalse(listen_fn.called, 'function should not have been called')
