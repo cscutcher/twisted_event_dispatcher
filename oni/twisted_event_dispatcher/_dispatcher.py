@@ -17,18 +17,44 @@ from oni.twisted_event_dispatcher.interfaces import IBackgroundUtility
 DEV_LOGGER = logging.getLogger(__name__)
 
 
+class _CallableWeakProxy(object):
+    '''
+    Weakref proxy type class for just holding a callable. If the referent dissapears the function
+    will return None and ignore arguments
+    '''
+    def __init__(self, orig_fn):
+        self.weakref = weakref.ref(orig_fn)
+
+    def __call__(self, *args, **kwargs):
+        callable = self.weakref()
+        if callable is None:
+            return None
+        else:
+            return callable(*args, **kwargs)
+
+
+class _MethodWeakProxy(object):
+    '''
+    Weakref proxy type class for just holding a bound method.
+    The weakref is actual setup on the instance not the method itself.
+    If the referent dissapears the function will return None and ignore arguments
+    '''
+    def __init__(self, orig_method):
+        self.weakref = weakref.ref(orig_method.im_self)
+        self.fn = orig_method.im_func
+
+    def __call__(self, *args, **kwargs):
+        inst = self.weakref()
+        if inst is None:
+            return None
+        else:
+            return self.fn(inst, *args, **kwargs)
+
+
 class _EventHandlerRegistrationEntry(collections.Hashable):
     '''
     Stores single event handler
     '''
-    @staticmethod
-    def _null_func(event):
-        '''
-        Null handler function that is used when the real function has since disappeared
-        but the _EventHandlerRegistrationEntry hasn't been removed from EventDispatcher
-        '''
-        pass
-
     def __init__(self, listen_fn, phase, use_weakref, remove_callback, **other_kwargs):
         self.details = other_kwargs
         self.id = id(self)
@@ -36,11 +62,16 @@ class _EventHandlerRegistrationEntry(collections.Hashable):
         self.remove_callback = remove_callback
 
         if use_weakref:
-            self._listen_fn = None
-            self._listen_ref = weakref.ref(listen_fn, self._auto_remove)
+            if hasattr(listen_fn, 'im_self'):
+                # This case we have a bound instance method. Weakref the instance not the method
+                DEV_LOGGER.error('XXX')
+                weakref.ref(listen_fn.im_self, self._auto_remove)
+                self.listen_fn = _MethodWeakProxy(listen_fn)
+            else:
+                weakref.ref(listen_fn, self._auto_remove)
+                self.listen_fn = _CallableWeakProxy(listen_fn)
         else:
-            self._listen_fn = listen_fn
-            self._listen_ref = None
+            self.listen_fn = listen_fn
 
     def _auto_remove(self, _weakref):
         '''
@@ -48,31 +79,6 @@ class _EventHandlerRegistrationEntry(collections.Hashable):
         '''
         DEV_LOGGER.debug('Auto removing %r', self)
         return self.remove_callback(self.id)
-
-    @property
-    def listen_fn(self):
-        '''
-        Property to get the listen function that copes with weakref if present.
-
-        :returns: Callable that takes event arguent
-        '''
-        if self._listen_fn is not None:
-            return self._listen_fn
-
-        deref = self._listen_ref()
-
-        # It's possible that this _EventHandlerRegistrationEntry can be triggered after the
-        #  listen_fn has been gc'd but before the weakref has triggered the remove in the
-        #  EventDispatcher. This handles this scenario by calling a null handler.
-        if deref is None:
-            DEV_LOGGER.debug(
-                (
-                    'EventDispatcher with id %r was in the process of being removed when listen_fn'
-                    ' was accessed.'),
-                self.id)
-            return self._null_func
-        else:
-            return deref
 
     def __hash__(self):
         return self.id
