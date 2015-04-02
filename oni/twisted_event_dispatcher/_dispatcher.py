@@ -33,13 +33,21 @@ class _EventHandlerRegistrationEntry(collections.Hashable):
         self.details = other_kwargs
         self.id = id(self)
         self.phase = phase
+        self.remove_callback = remove_callback
 
         if use_weakref:
             self._listen_fn = None
-            self._listen_ref = weakref.ref(listen_fn, lambda _fn: remove_callback(self.id))
+            self._listen_ref = weakref.ref(listen_fn, self._auto_remove)
         else:
             self._listen_fn = listen_fn
             self._listen_ref = None
+
+    def _auto_remove(self, _weakref):
+        '''
+        Function to auto remove self with weakrefs
+        '''
+        DEV_LOGGER.debug('Auto removing %r', self)
+        return self.remove_callback(self.id)
 
     @property
     def listen_fn(self):
@@ -57,6 +65,11 @@ class _EventHandlerRegistrationEntry(collections.Hashable):
         #  listen_fn has been gc'd but before the weakref has triggered the remove in the
         #  EventDispatcher. This handles this scenario by calling a null handler.
         if deref is None:
+            DEV_LOGGER.debug(
+                (
+                    'EventDispatcher with id %r was in the process of being removed when listen_fn'
+                    ' was accessed.'),
+                self.id)
             return self._null_func
         else:
             return deref
@@ -95,6 +108,7 @@ class EventDispatcher(object):
         '''
         Restart a stopped EventDispatcher
         '''
+        DEV_LOGGER.debug('Starting EventDispatcher %r', self)
         self._running = True
 
     def stop(self):
@@ -104,6 +118,7 @@ class EventDispatcher(object):
 
         :returns: Deferred that will callback when the EventDispatcher has stopped as is quiescent.
         '''
+        DEV_LOGGER.debug('Stopping EventDispatcher %r', self)
         self._running = False
         return self._event_handler_modification_lock.acquire().addCallback(
             lambda lock: lock.release())
