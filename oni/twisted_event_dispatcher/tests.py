@@ -28,12 +28,17 @@ class TestEventDispatcher(unittest.TestCase):
         '''tearDown test'''
         return self.inst.stop()
 
+    @staticmethod
+    def listen_fn_mock():
+        '''Mock for listen fn'''
+        return mock.Mock(spec='__call__')
+
     @defer.inlineCallbacks
     def test_all_match(self):
         '''
         Test event handler is fired when all details match
         '''
-        listen_fn = mock.Mock()
+        listen_fn = self.listen_fn_mock()
 
         yield self.inst.add_event_handler(listen_fn, 'during', username='bob', role='admin')
         event = 'some_event'
@@ -47,7 +52,7 @@ class TestEventDispatcher(unittest.TestCase):
         '''
         Test handler doesn't fire when no details match
         '''
-        listen_fn = mock.Mock()
+        listen_fn = self.listen_fn_mock()
 
         yield self.inst.add_event_handler(listen_fn, 'during', username='bob', role='admin')
         event = 'some_event'
@@ -61,7 +66,7 @@ class TestEventDispatcher(unittest.TestCase):
         '''
         Test handler fires when one detail matches, and remaining details are unspecifed
         '''
-        listen_fn = mock.Mock()
+        listen_fn = self.listen_fn_mock()
 
         yield self.inst.add_event_handler(listen_fn, 'during', role='admin')
         event = 'some_event'
@@ -75,7 +80,7 @@ class TestEventDispatcher(unittest.TestCase):
         '''
         Test a removed handler no longer fires
         '''
-        listen_fn = mock.Mock()
+        listen_fn = self.listen_fn_mock()
 
         handle = yield self.inst.add_event_handler(
             listen_fn, 'during', username='bob', role='admin')
@@ -93,7 +98,7 @@ class TestEventDispatcher(unittest.TestCase):
         Test that a function that is garbage collected no longer fires indicating it has
         been automatically removed from dispatcher
         '''
-        listen_fn = mock.Mock()
+        listen_fn = self.listen_fn_mock()
         event = 'some_event'
 
         # Create lambda that can be deleted
@@ -117,11 +122,43 @@ class TestEventDispatcher(unittest.TestCase):
         self.assertFalse(listen_fn.called, 'function should not have been called')
 
     @defer.inlineCallbacks
+    def test_auto_remove_with_instance_method(self):
+        '''
+        Test that a instance method that is garbage collected no longer fires indicating it has
+        been automatically removed from dispatcher
+        '''
+        listen_fn = self.listen_fn_mock()
+        event = 'some_event'
+
+        # Create instance that can be deleted
+        class TestClass(object):
+            def listen_fn_wrapper(self, event):
+                '''Just pass through to mock'''
+                return listen_fn(event)
+
+        inst = TestClass()
+
+        yield self.inst.add_event_handler(
+            inst.listen_fn_wrapper, 'during', username='bob', role='admin')
+
+        # Fire test
+        yield self.inst.fire_event(event, username='bob', role='admin')
+        listen_fn.assert_called_once_with(event)
+        listen_fn.reset_mock()
+
+        # Delete and fire again
+        del inst
+
+        yield self.inst.fire_event(event, username='bob', role='admin')
+
+        self.assertFalse(listen_fn.called, 'function should not have been called')
+
+    @defer.inlineCallbacks
     def test_stop_start(self):
         '''
         Test that stopping and starting dispatcher prevent and allow handling as expected.
         '''
-        listen_fn = mock.Mock()
+        listen_fn = self.listen_fn_mock()
 
         self.inst.add_event_handler(listen_fn, 'during', role='admin')
         event = 'some_event'
@@ -147,7 +184,7 @@ class TestEventDispatcher(unittest.TestCase):
         '''
         Test that specify a match spec that isn't present during setup raises an exception.
         '''
-        listen_fn = mock.Mock()
+        listen_fn = self.listen_fn_mock()
 
         self.assertRaises(
             ValueError,
