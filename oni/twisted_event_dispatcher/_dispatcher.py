@@ -64,7 +64,6 @@ class _EventHandlerRegistrationEntry(collections.Hashable):
         if use_weakref:
             if hasattr(listen_fn, 'im_self'):
                 # This case we have a bound instance method. Weakref the instance not the method
-                DEV_LOGGER.error('XXX')
                 weakref.ref(listen_fn.im_self, self._auto_remove)
                 self.listen_fn = _MethodWeakProxy(listen_fn)
             else:
